@@ -17,6 +17,8 @@ const Register = () => {
         },
         phone: ''
     });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -38,6 +40,9 @@ const Register = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
+        
         try {
             const res = await fetch('/api/auth/register', {
                 method: 'POST',
@@ -45,14 +50,19 @@ const Register = () => {
                 body: JSON.stringify(formData),
             });
             const data = await res.json();
+            
             if (res.ok) {
                 login(data.token);
                 navigate('/');
             } else {
+                setError(data.msg || 'Registration failed');
                 console.error(data.msg);
             }
         } catch (err) {
+            setError('Network error. Please try again.');
             console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -60,6 +70,11 @@ const Register = () => {
         <div className="flex items-center justify-center h-screen bg-gray-200">
             <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold text-center">Inscription</h2>
+                {error && (
+                    <div className="p-3 text-sm text-red-700 bg-red-100 border border-red-400 rounded">
+                        {error}
+                    </div>
+                )}
                 <form onSubmit={onSubmit} className="space-y-6">
                     <div className="flex gap-2">
                         <div className="w-1/2">
@@ -175,9 +190,10 @@ const Register = () => {
                     <div>
                         <button
                             type="submit"
-                            className="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            disabled={loading}
+                            className="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            S'inscrire
+                            {loading ? 'Inscription en cours...' : 'S\'inscrire'}
                         </button>
                     </div>
                 </form>
